@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scanner</title>
+  <script src="./html5-qrcode.min.js"></script>
+</head>
+
+<body>
+  <div style="width: 400px" id="reader"></div>
+
+  <input type="file" id="qr-input-file" accept="image/*" required></input>
+</body>
+
+<script>
+  /*
+    "#################################################################################################################
+    " 2020.11.11 강준하 작성
+    " 소스 원본: https://github.com/mebjas/html5-qrcode
+    "
+    " ※카메라가 없으면 작동하지 않습니다
+    "#################################################################################################################
+  */
+  Html5Qrcode.getCameras().then((devices) => {
+    // 카메라 가져오기
+    if (devices && devices.length) {
+      var cameraId = devices[0].id;
+    }
+
+    const html5QrCode = new Html5Qrcode("reader");
+
+    // ====== QR 카메라 스캐너
+    html5QrCode
+      .start(
+        cameraId,
+        {
+          fps: 10,
+          qrbox: 250,
+          facingMode: "user",
+        },
+        (qrCodeMessage) => {
+          // QR 카메라로 인식 성공
+          console.log(qrCodeMessage);
+          html5QrCode.stop();
+        },
+        (errorMessage) => {
+          // QR 카메라로 인식 실패
+        }
+      )
+      .catch((err) => {
+        console.log(err);
+      });
+
+    // ====== QR 이미지 (input file) 스캐너
+    const fileinput = document.getElementById("qr-input-file");
+    fileinput.addEventListener("change", (e) => {
+      if (e.target.files.length == 0) {
+        // 빈 이미지 업로드시 탈출
+        return;
+      }
+
+      // QR 카메라 스캐너 중단
+      // 중단하지 않으면 오류 남
+      html5QrCode.stop();
+
+      const imageFile = e.target.files[0];
+      html5QrCode
+        .scanFile(imageFile, false)
+        .then((qrCodeMessage) => {
+          // QR 이미지로 인식 성공
+          console.log(qrCodeMessage);
+        })
+        .catch((err) => {
+          // QR 이미지로 인식 실패
+          console.log(`Error scanning file. Reason: ${err}`);
+        });
+    });
+  })
+    .catch((err) => {
+      console.log(err);
+    }); 
+</script>
+
+</html>
